@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { HttpException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Event } from './event.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -16,8 +16,13 @@ export class EventService {
   ) { }
 
   async getAllEvents(): Promise<Event[]> {
+    try{
     this.logger.log("fetch all events")
     return await this.eventRepo.find();
+    }catch(error){
+      this.logger.error(`Error of fetching hotels`, error.stack);
+      throw new HttpException('Failed to fetch hotels',500)
+    }
   }
 
   async createEvent(

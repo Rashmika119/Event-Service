@@ -11,16 +11,12 @@ export class EventController {
   @Get()
   getAllEvents(@Query() param: eventSearchDto) {
     this.logger.log(`GET /event called with query: ${JSON.stringify(param)}`);
-    try {
       if (Object.keys(param).length) {
         return this.eventService.eventSearch(param);
       } else {
         return this.eventService.getAllEvents();
       }
-    } catch (error) {
-      this.logger.error('Error fetching events', error.stack);
-      throw error
-    }
+    
 
   }
   @Get('/:id')

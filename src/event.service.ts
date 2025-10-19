@@ -1,4 +1,4 @@
-import { HttpException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { Delete, HttpException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { Event } from './Entity/event.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -60,7 +60,7 @@ export class EventService {
       }
       this.logger.log(`deleted event with id :${id} successfully`)
     } catch (error) {
-      this.logger.error("error of deleteing event with id :",id);
+      this.logger.error("error of deleteing event with id :", id);
       throw new InternalServerErrorException("failed to delete the event");
     }
   }
@@ -85,9 +85,15 @@ export class EventService {
         })
       }
       if (date) {
-        this.logger.debug(`Filtering event by date : ${date}`)
-        query.andWhere('event.date LIKE :date', {
-          date: `%${date}%`,
+        const start = new Date(date);
+        start.setHours(0, 0, 0, 0);
+
+        const end = new Date(date);
+        end.setHours(23, 59, 59, 999);
+
+        query.andWhere('weather.date BETWEEN :start AND :end', {
+          start: start.toISOString(),
+          end: end.toISOString(),
         })
       }
       if (location) {
@@ -124,6 +130,10 @@ export class EventService {
     this.logger.log(`Updating event with ID: ${id}`);
     try {
       const event = await this.getEventById(id);
+      if (eventUpdatedto.date) {
+        event.date = new Date(eventUpdatedto.date);
+        delete eventUpdatedto.date;
+      }
       Object.assign(event, eventUpdatedto);
 
       const updatedEvent = await this.eventRepo.save(event);

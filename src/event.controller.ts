@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, InternalServerErrorException, Logger, Pa
 import { EventService } from './event.service';
 import type { eventSearchDto } from './DTO/eventSearch.dto';
 import type { eventUpdateDto } from './DTO/eventUpdate.dto';
+import { createEventDto } from './DTO/createEvent.dto';
 
 @Controller('event')
 export class EventController {
@@ -28,15 +29,11 @@ export class EventController {
   }
 
   @Post()
-  async createEvent(
-    @Body('name') name: string,
-    @Body('location') location: string,
-    @Body('category') category: string,
-    @Body('date') date: Date,
-
-  ) {
+  async createEvent(@Body() dto:createEventDto) {
+    const {name,location,category,date}=dto;
     this.logger.log(`POST /event called to create event: ${name} at ${location} on ${date}`);
-    return this.eventService.createEvent(name, location, category, date)
+    const parseDate=new Date()
+    return this.eventService.createEvent(name, location, category, parseDate)
   }
 
 

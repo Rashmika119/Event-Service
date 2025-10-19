@@ -11,24 +11,19 @@ export class EventController {
   @Get()
   getAllEvents(@Query() param: eventSearchDto) {
     this.logger.log(`GET /event called with query: ${JSON.stringify(param)}`);
-      if (Object.keys(param).length) {
-        return this.eventService.eventSearch(param);
-      } else {
-        return this.eventService.getAllEvents();
-      }
-    
+    if (Object.keys(param).length) {
+      return this.eventService.eventSearch(param);
+    } else {
+      return this.eventService.getAllEvents();
+    }
+
 
   }
   @Get('/:id')
   async getEventById(@Param('id') id: string) {
     this.logger.log(`GET /event/${id} called`);
-    try {
-      return this.eventService.getEventById(id);
-    } catch (error) {
-      this.logger.error(`Error fetching event with id ${id}`, error.stack);
-      throw error;
+    return this.eventService.getEventById(id);
 
-    }
 
   }
 
@@ -41,13 +36,7 @@ export class EventController {
 
   ) {
     this.logger.log(`POST /event called to create event: ${name} at ${location} on ${date}`);
-    try {
-      return this.eventService.createEvent(name, location, category, date)
-    } catch (error) {
-      this.logger.error('Error creating event', error.stack);
-      throw error;
-    }
-
+    return this.eventService.createEvent(name, location, category, date)
   }
 
 
@@ -58,13 +47,8 @@ export class EventController {
     @Body() updatedData: eventUpdateDto
   ) {
     this.logger.log(`PUT /event/${id} called to update event`);
-    try {
-      return await this.eventService.updateEvent(id, updatedData);
-    } catch (error) {
-      this.logger.error(`Error updating event with id ${id}`, error.stack);
-      throw error
+    return await this.eventService.updateEvent(id, updatedData);
 
-    }
 
   }
 
@@ -73,17 +57,12 @@ export class EventController {
     @Param() id: string
   ) {
     this.logger.log(`DELETE /event/${id} called`);
-    try {
-      await this.eventService.deleteEvent(id)
-      this.logger.log(`Event with id ${id} successfully deleted`);
-      return { message: 'Event deleted successfully' };
-
-    } catch (error) {
-      this.logger.error(`Error deleting event with id ${id}`, error.stack);
-      throw error;
-
-    }
+    await this.eventService.deleteEvent(id)
+    this.logger.log(`Event with id ${id} successfully deleted`);
+    return { message: 'Event deleted successfully' };
 
   }
 
 }
+
+

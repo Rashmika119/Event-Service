@@ -1,4 +1,4 @@
-import { HttpException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { HttpException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { Event } from './event.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -16,12 +16,12 @@ export class EventService {
   ) { }
 
   async getAllEvents(): Promise<Event[]> {
-    try{
-    this.logger.log("fetch all events")
-    return await this.eventRepo.find();
-    }catch(error){
+    try {
+      this.logger.log("fetch all events")
+      return await this.eventRepo.find();
+    } catch (error) {
       this.logger.error(`Error of fetching hotels`, error.stack);
-      throw new HttpException('Failed to fetch hotels',500)
+      throw new InternalServerErrorException('Failed to fetch hotels')
     }
   }
 
@@ -32,86 +32,105 @@ export class EventService {
     date: Date,
   ): Promise<Event> {
     this.logger.log(`creating new event name :${name}`)
-    const event = this.eventRepo.create({
-      name,
-      location,
-      category,
-      date
-    });
-    await this.eventRepo.save(event);
-    this.logger.debug(`event created with id :${event.id}`)
-    return event;
+    try {
+      const event = this.eventRepo.create({
+        name,
+        location,
+        category,
+        date
+      });
+      await this.eventRepo.save(event);
+      this.logger.debug(`event created with id :${event.id}`)
+      return event;
+    } catch (error) {
+      this.logger.error(`Error of creating event with`);
+      throw new InternalServerErrorException("Failed to create the event");
+    }
   }
 
 
   async deleteEvent(id: string): Promise<void> {
-    const result = await this.eventRepo.delete(id);
-    this.logger.log(`Attempting to delete the event with id :${id}`)
+    try {
+      const result = await this.eventRepo.delete(id);
+      this.logger.log(`Attempting to delete the event with id :${id}`)
 
-    if (result.affected === 0) {
-      this.logger.error(`deleting event failed.Event with ${id} not found`)
-      throw new NotFoundException(`Event with is ${id} not found`)
+      if (result.affected === 0) {
+        this.logger.error(`deleting event failed.Event with ${id} not found`)
+        throw new NotFoundException(`Event with is ${id} not found`)
+      }
+      this.logger.log(`deleted event with id :${id} successfully`)
+    } catch (error) {
+      throw new InternalServerErrorException("failed to delete the event");
     }
-    this.logger.log(`deleted event with id :${id} successfully`)
-
   }
-
 
   async eventSearch(eventSearchDto: eventSearchDto): Promise<Event[]> {
     const { name, location, date, category } = eventSearchDto;
     this.logger.log("fetching event datat according to the filters")
-    const query = this.eventRepo.createQueryBuilder('event')
+    try {
+      const query = this.eventRepo.createQueryBuilder('event')
 
+      if (name) {
+        this.logger.debug(`Filtering event by name : ${name}`)
+        query.andWhere('event.name LIKE :name', {
+          name: `%${name}%`,
+        })
+      }
 
-
-    if (name) {
-      this.logger.debug(`Filtering event by name : ${name}`)
-      query.andWhere('event.name LIKE :name', {
-        name: `%${name}%`,
-      })
+      if (category) {
+        this.logger.debug(`Filtering event by category : ${category}`)
+        query.andWhere('event.category LIKE :category', {
+          category: `%${category}%`,
+        })
+      }
+      if (date) {
+        this.logger.debug(`Filtering event by date : ${date}`)
+        query.andWhere('event.date LIKE :date', {
+          date: `%${date}%`,
+        })
+      }
+      if (location) {
+        this.logger.debug(`Filtering event by location : ${location}`)
+        query.andWhere('event.location LIKE :location', {
+          location: `%${location}%`,
+        })
+      }
+      const events = await query.getMany();
+      this.logger.log(`Search returned ${events.length} result(s)`);
+      return events;
+    } catch (error) {
+      throw new InternalServerErrorException("failed to search event")
     }
-
-    if (category) {
-      this.logger.debug(`Filtering event by category : ${category}`)
-      query.andWhere('event.category LIKE :category', {
-        category: `%${category}%`,
-      })
-    }
-    if (date) {
-      this.logger.debug(`Filtering event by date : ${date}`)
-      query.andWhere('event.date LIKE :date', {
-        date: `%${date}%`,
-      })
-    }
-    if (location) {
-      this.logger.debug(`Filtering event by location : ${location}`)
-      query.andWhere('event.location LIKE :location', {
-        location: `%${location}%`,
-      })
-    }
-    const events= await query.getMany();
-    this.logger.log(`Search returned ${events.length} result(s)`);
-    return events;
-
   }
+
   async getEventById(id: string): Promise<Event> {
-    
-    const event = await this.eventRepo.findOne({ where: { id } })
-    if (!event) {
-      this.logger.error(`Event with ID ${id} not found`);
-      throw new NotFoundException(`Event with ID ${id} not found`);
+    try {
+      const event = await this.eventRepo.findOne({ where: { id } })
+      if (!event) {
+        this.logger.error(`Event with ID ${id} not found`);
+        throw new NotFoundException(`Event with ID ${id} not found`);
+      }
+      return event;
+    } catch (error) {
+      this.logger.error(`Error fetching event with id ${id}`, error.stack);
+      throw new InternalServerErrorException("failed to get the event by id");
+
     }
-    return event;
   }
 
   async updateEvent(id: string, eventUpdatedto: eventUpdateDto): Promise<Event> {
     this.logger.log(`Updating event with ID: ${id}`);
-    const event = await this.getEventById(id);
-    Object.assign(event, eventUpdatedto);
+    try {
+      const event = await this.getEventById(id);
+      Object.assign(event, eventUpdatedto);
 
-    const updatedEvent= await this.eventRepo.save(event);
-    this.logger.log(`Event with ID ${id} updated successfully`);
-    return updatedEvent;
+      const updatedEvent = await this.eventRepo.save(event);
+      this.logger.log(`Event with ID ${id} updated successfully`);
+      return updatedEvent;
+    } catch (error) {
+      this.logger.error('Error creating event', error.stack);
+      throw new InternalServerErrorException("failed to update the event");
+    }
 
   }
 }

@@ -12,28 +12,41 @@ export class EventController {
   @Get()
   getAllEvents(@Query() param: eventSearchDto) {
     this.logger.log(`GET /event called with query: ${JSON.stringify(param)}`);
-    if (Object.keys(param).length) {
-      return this.eventService.eventSearch(param);
-    } else {
-      return this.eventService.getAllEvents();
+    try {
+      if (Object.keys(param).length) {
+        return this.eventService.eventSearch(param);
+      } else {
+        return this.eventService.getAllEvents();
+      }
+    } catch (error) {
+      this.logger.error('Error fetching events', error.stack);
+      throw new InternalServerErrorException('Failed to fetch events');
     }
-
-
   }
   @Get('/:id')
   async getEventById(@Param('id') id: string) {
     this.logger.log(`GET /event/${id} called`);
-    return this.eventService.getEventById(id);
+    try {
+      return this.eventService.getEventById(id);
+    } catch (error) {
+      this.logger.error(`Error fetching event with id ${id}`, error.stack);
+      throw new InternalServerErrorException('Failed to fetch event');
+    }
 
 
   }
 
   @Post()
-  async createEvent(@Body() dto:createEventDto) {
-    const {name,location,category,date}=dto;
+  async createEvent(@Body() dto: createEventDto) {
+    const { name, location, category, date } = dto;
     this.logger.log(`POST /event called to create event: ${name} at ${location} on ${date}`);
-    const parseDate=new Date()
-    return this.eventService.createEvent(name, location, category, parseDate)
+    try {
+      const parseDate = new Date()
+      return this.eventService.createEvent(name, location, category, parseDate)
+    } catch (error) {
+      this.logger.error('Error creating event', error.stack);
+      throw new InternalServerErrorException('Failed to create event');
+    }
   }
 
 
@@ -44,8 +57,12 @@ export class EventController {
     @Body() updatedData: eventUpdateDto
   ) {
     this.logger.log(`PUT /event/${id} called to update event`);
-    return await this.eventService.updateEvent(id, updatedData);
-
+    try {
+      return await this.eventService.updateEvent(id, updatedData);
+    } catch (error) {
+      this.logger.error(`Error updating event with id ${id}`, error.stack);
+      throw new InternalServerErrorException('Failed to update event');
+    }
 
   }
 
@@ -54,9 +71,14 @@ export class EventController {
     @Param() id: string
   ) {
     this.logger.log(`DELETE /event/${id} called`);
-    await this.eventService.deleteEvent(id)
-    this.logger.log(`Event with id ${id} successfully deleted`);
-    return { message: 'Event deleted successfully' };
+    try {
+      await this.eventService.deleteEvent(id)
+      this.logger.log(`Event with id ${id} successfully deleted`);
+      return { message: 'Event deleted successfully' };
+    } catch (error) {
+      this.logger.error(`Error deleting event with id ${id}`, error.stack);
+      throw new InternalServerErrorException('Failed to delete event');
+    }
 
   }
 

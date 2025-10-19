@@ -1,9 +1,9 @@
 import { HttpException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
-import { Event } from './event.entity';
+import { Event } from './Entity/event.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { eventSearchDto } from './eventSearch.dto';
-import { eventUpdateDto } from './eventUpdate.dto';
+import { eventSearchDto } from './DTO/eventSearch.dto';
+import { eventUpdateDto } from './DTO/eventUpdate.dto';
 
 
 @Injectable()

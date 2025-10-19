@@ -60,6 +60,7 @@ export class EventService {
       }
       this.logger.log(`deleted event with id :${id} successfully`)
     } catch (error) {
+      this.logger.error("error of deleteing event with id :",id);
       throw new InternalServerErrorException("failed to delete the event");
     }
   }
@@ -99,6 +100,7 @@ export class EventService {
       this.logger.log(`Search returned ${events.length} result(s)`);
       return events;
     } catch (error) {
+      this.logger.error("error of searching event")
       throw new InternalServerErrorException("failed to search event")
     }
   }

@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, InternalServerErrorException, Logger, Param, Post, Put, Query } from '@nestjs/common';
 import { EventService } from './event.service';
-import type { eventSearchDto } from './DTO/eventSearch.dto';
-import type { eventUpdateDto } from './DTO/eventUpdate.dto';
+import { eventSearchDto } from './DTO/eventSearch.dto';
+import { eventUpdateDto } from './DTO/eventUpdate.dto';
 import { createEventDto } from './DTO/createEvent.dto';
 
 @Controller('event')
